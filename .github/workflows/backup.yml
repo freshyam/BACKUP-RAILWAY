@@ -2,28 +2,39 @@ name: Backup MySQL Railway
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+    - cron: '*/10 * * * *'   # 🔁 cada 10 min (pruebas)
+    # - cron: '0 6 * * *'    # ✅ descomentar para 1 vez al día (6am UTC)
+  workflow_dispatch:          # por si quieres correrlo manual también
 
 jobs:
   backup:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Crear backup
+      - name: Checkout repo de respaldos
+        uses: actions/checkout@v4
+        with:
+          repository: freshyam/backups-mysql
+          token: ${{ secrets.GH_TOKEN }}
+          path: repo-backup
+
+      - name: Crear backup MySQL
         run: |
           mysqldump \
             -h ${{ secrets.DB_HOST }} \
             -P ${{ secrets.DB_PORT }} \
             -u ${{ secrets.DB_USER }} \
             -p${{ secrets.DB_PASS }} \
-            ${{ secrets.DB_NAME }} > backup.sql
+            ${{ secrets.DB_NAME }} > repo-backup/backup-$(date +%Y%m%d-%H%M%S).sql
 
       - name: Comprimir backup
-        run: gzip backup.sql
+        run: gzip repo-backup/backup-*.sql
 
-      - name: Subir backup
-        uses: actions/upload-artifact@v4
-        with:
-          name: backup-${{ github.run_id }}
-          path: backup.sql.gz
+      - name: Guardar en repo privado
+        working-directory: repo-backup
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "🗄️ Backup $(date +'%Y-%m-%d %H:%M:%S UTC')"
+          git push
