@@ -4,19 +4,25 @@ on:
   schedule:
     - cron: '*/10 * * * *'   # 🔁 cada 10 min (pruebas)
     # - cron: '0 6 * * *'    # ✅ descomentar para 1 vez al día (6am UTC)
-  workflow_dispatch:          # por si quieres correrlo manual también
+  workflow_dispatch:
 
 jobs:
   backup:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo de respaldos
-        uses: actions/checkout@v4
-        with:
-          repository: freshyam/backups-mysql
-          token: ${{ secrets.GH_TOKEN }}
-          path: repo-backup
+      - name: Preparar repo de respaldos
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/freshyam/backups-mysql.git repo-backup 2>/dev/null || true
+          
+          # Si el repo está vacío o falló el clone, lo inicializamos
+          if [ ! -d "repo-backup/.git" ]; then
+            mkdir -p repo-backup
+            cd repo-backup
+            git init
+            git remote add origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/freshyam/backups-mysql.git
+            git checkout -b main
+          fi
 
       - name: Crear backup MySQL
         run: |
@@ -37,4 +43,4 @@ jobs:
           git config user.email "actions@github.com"
           git add .
           git commit -m "🗄️ Backup $(date +'%Y-%m-%d %H:%M:%S UTC')"
-          git push
+          git push --set-upstream origin main
