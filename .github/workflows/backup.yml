@@ -2,7 +2,7 @@ name: Backup MySQL Railway
 
 on:
   schedule:
-    - cron: '30 6 * * *'
+    - cron: '40 18 * * *'
   workflow_dispatch:
 
 jobs:
