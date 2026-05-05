@@ -2,8 +2,8 @@ name: Backup MySQL Railway
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # 🔁 cada 10 min (pruebas)
-    # - cron: '0 6 * * *'    # ✅ descomentar para 1 vez al día (6am UTC)
+     # - cron: '*/10 * * * *'   # 🔁 cada 10 min 
+   - cron: '0 6 * * *'    
   workflow_dispatch:
 
 jobs:
